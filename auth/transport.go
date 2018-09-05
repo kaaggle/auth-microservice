@@ -13,6 +13,33 @@ type HttpUserHandler struct {
 	AuthUsecase AuthUsecase
 }
 
+func (h *HttpUserHandler) SchoolRegistration(w http.ResponseWriter, r *http.Request) {
+	s := models.School{}
+	s.CreatedAt = time.Now()
+	s.UpdatedAt = time.Now()
+	s.Approved = false
+	s.Type = "SCHOOL_ADMIN"
+	json.NewDecoder(r.Body).Decode(&s)
+
+	err := s.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	schoolResp, err := h.AuthUsecase.SchoolRegistration(&s)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(models.Response{
+		Error:   false,
+		Message: "School registration successfully.Waiting for approval.",
+		Data:    &schoolResp,
+	})
+}
+
 func (h *HttpUserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	loginData := models.Login{}
 	json.NewDecoder(r.Body).Decode(&loginData)
@@ -65,6 +92,8 @@ func NewAuthHttpHandler(r *chi.Mux, us AuthUsecase) {
 		AuthUsecase: us,
 	}
 
+	r.Post("/p/auth/school", handler.SchoolRegistration)
 	r.Post("/p/auth/login", handler.Login)
 	r.Post("/p/auth/signup", handler.Signup)
+
 }

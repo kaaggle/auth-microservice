@@ -15,6 +15,16 @@ func NewAuthUsecase(authRepo auth.AuthRepository) auth.AuthRepository {
 	}
 }
 
+func (a *authUsecase) SchoolRegistration(s *models.School) (*models.School, error) {
+	school, err := a.authRepo.SchoolRegistration(s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return school, nil
+}
+
 func (a *authUsecase) Login(email, password string) (bool, error) {
 	exists, err := a.authRepo.Login(email, password)
 

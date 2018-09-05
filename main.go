@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -50,7 +51,8 @@ func main() {
 	authUsecase := authUsecase.NewAuthUsecase(authRepo)
 	auth.NewAuthHttpHandler(r, authUsecase)
 
-	http.ListenAndServe(conf.BaseURL, r)
+	handler := cors.Default().Handler(r)
+	http.ListenAndServe(conf.BaseURL, handler)
 }
 
 /*
