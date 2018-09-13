@@ -25,18 +25,18 @@ func (a *authUsecase) SchoolRegistration(s *models.School) (*models.School, erro
 	return school, nil
 }
 
-func (a *authUsecase) Login(email, password string) (bool, error) {
-	exists, err := a.authRepo.Login(email, password)
+func (a *authUsecase) Login(email, password string) (bool, string, error) {
+	exists, token, err := a.authRepo.Login(email, password)
 
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	if !exists {
-		return false, nil
+		return false, "", err
 	}
 
-	return true, nil
+	return true, token, nil
 }
 
 func (a *authUsecase) Signup(u *models.User) (*models.User, error) {

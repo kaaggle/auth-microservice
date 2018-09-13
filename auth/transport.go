@@ -52,13 +52,19 @@ func (h *HttpUserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// returns true if user can login, otherwise error with information
-	canLogin, err := h.AuthUsecase.Login(loginData.Email, loginData.Password)
+	_, token, err := h.AuthUsecase.Login(loginData.Email, loginData.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
-	json.NewEncoder(w).Encode(canLogin)
+	json.NewEncoder(w).Encode(models.Response{
+		Error:   false,
+		Message: "Logged in successfully",
+		Data: map[string]interface{}{
+			"token": token,
+		},
+	})
 }
 
 func (h *HttpUserHandler) Signup(w http.ResponseWriter, r *http.Request) {
