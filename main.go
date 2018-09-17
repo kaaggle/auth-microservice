@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"schoolsystem/auth-microservice/auth"
 	"schoolsystem/auth-microservice/core"
 	"schoolsystem/auth-microservice/db"
@@ -23,7 +24,11 @@ func main() {
 	}
 
 	// setup config
-	conf := core.NewConfig()
+	conf, err := core.NewConfig()
+	if err != nil {
+		logger.Panic(err.Error())
+	}
+	log.Println(conf.String())
 
 	// database connection
 	dbConn, err := db.NewDatabaseConnection(conf.Database.URL)
@@ -31,6 +36,7 @@ func main() {
 	if err != nil {
 		logger.Panic(err.Error())
 	}
+	log.Println("Successfully connected to mlab.")
 
 	defer dbConn.Close()
 
@@ -52,7 +58,13 @@ func main() {
 	auth.NewAuthHttpHandler(r, authUsecase)
 
 	handler := cors.Default().Handler(r)
-	http.ListenAndServe(conf.BaseURL, handler)
+
+	log.Printf("Server running on: %s", conf.BaseURL)
+	err = http.ListenAndServe(conf.BaseURL, handler)
+	if err != nil {
+		log.Printf("Error running server: %s", err.Error())
+	}
+
 }
 
 /*

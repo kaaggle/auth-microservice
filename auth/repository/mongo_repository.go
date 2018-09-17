@@ -32,18 +32,18 @@ func (m *mongoAuthRepo) SchoolRegistration(s *models.School) (*models.School, er
 	return s, nil
 }
 
-func (m *mongoAuthRepo) Login(email, password string) (bool, string, error) {
+func (m *mongoAuthRepo) Login(email, password string) (*models.User, string, error) {
 	u := models.User{}
 	err := m.UserCollection.Find(bson.M{"email": email}).One(&u)
 
 	if err != nil {
-		return false, "", errors.New("User with this email not found")
+		return nil, "", errors.New("User with this email not found")
 	}
 
 	// check the password hash
 	isSame := auth.CheckPasswordHash(password, u.Password)
 	if !isSame {
-		return true, "", errors.New("Wrong password")
+		return nil, "", errors.New("Wrong password")
 	}
 
 	userClaim := auth.UserClaim{
@@ -52,9 +52,9 @@ func (m *mongoAuthRepo) Login(email, password string) (bool, string, error) {
 	}
 	token, err := auth.CreateTokenString(userClaim)
 	if err != nil {
-		return true, "", err
+		return &u, "", err
 	}
-	return true, token, nil
+	return &u, token, nil
 }
 
 func (m *mongoAuthRepo) Signup(u *models.User) (*models.User, error) {

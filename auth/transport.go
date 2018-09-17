@@ -52,7 +52,7 @@ func (h *HttpUserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// returns true if user can login, otherwise error with information
-	_, token, err := h.AuthUsecase.Login(loginData.Email, loginData.Password)
+	user, token, err := h.AuthUsecase.Login(loginData.Email, loginData.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
@@ -63,6 +63,7 @@ func (h *HttpUserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Message: "Logged in successfully",
 		Data: map[string]interface{}{
 			"token": token,
+			"user":  user,
 		},
 	})
 }
