@@ -57,8 +57,13 @@ func main() {
 	authUsecase := authUsecase.NewAuthUsecase(authRepo)
 	auth.NewAuthHttpHandler(r, authUsecase)
 
-	handler := cors.Default().Handler(r)
-
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000", "localhost:3000"},
+		AllowedHeaders:[]string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+		Debug: true,
+	})
+	handler := c.Handler(r)
 	log.Printf("Server running on: %s", conf.BaseURL)
 	err = http.ListenAndServe(conf.BaseURL, handler)
 	if err != nil {
