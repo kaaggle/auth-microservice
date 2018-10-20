@@ -1,9 +1,9 @@
 package auth
 
-import "church-adoration/models"
+import "schoolsystem/auth-microservice/models"
 
 type AuthRepository interface {
-	ActivateUser(id string) error
+	SchoolRegistration(*models.School) (*models.School, error)
 	Login(email, password string) (*models.User, string, error)
-	Signup(*models.User) (*models.User, string, error)
+	Signup(*models.User) (*models.User, error)
 }

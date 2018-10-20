@@ -1,4 +1,0 @@
-p, NORMAL_USER, /nu/*, (GET)|(POST)|(DELETE)|(PUT)
-p, ADMIN, /a/*, (GET)|(POST)|(PUT)|(DELETE)
-
-p, PUBLIC, /p/*, (GET)|(POST)
