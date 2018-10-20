@@ -7,9 +7,8 @@ import (
 )
 
 type Config struct {
-	BaseURL        string
-	Secret         string
-	CasbinConfPath string
+	BaseURL string
+	Secret  string
 	Database
 }
 
@@ -18,25 +17,19 @@ type Database struct {
 }
 
 func NewConfig() (*Config, error) {
-	baseURLEnv := "localhost:3300"
-	dbURL := "mongodb://church-adoration:church-adoration1@ds125693.mlab.com:25693/church-adoration"
-	secret := "MySECRET"
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	casbinConfPath := wd + "/authorization/conf/"
+	baseURLEnv := os.Getenv("KAAGGLE_AUTH_API_URL")
+	dbURL := os.Getenv("KAAGGLE_DB_URL")
+	secret := os.Getenv("KAAGGLE_SECRET")
 
 	if baseURLEnv != "" && dbURL != "" && secret != "" {
 		return &Config{
-			BaseURL:        baseURLEnv,
-			Database:       Database{dbURL},
-			CasbinConfPath: casbinConfPath,
-			Secret:         secret,
+			BaseURL:  baseURLEnv,
+			Database: Database{dbURL},
+			Secret:   secret,
 		}, nil
 	}
 
-	return nil, errors.New("Please add config variables")
+	return nil, errors.New("Please add KAAGGLE_AUTH_API_URL, KAAGGLE_DB_URL and KAAGGLE_SECRET environmental variables")
 }
 
 func (c *Config) String() string {

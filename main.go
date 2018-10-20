@@ -1,23 +1,16 @@
 package main
 
 import (
-	"church-adoration/appointment"
-	"church-adoration/auth"
-	"church-adoration/middlewares"
-
-	"church-adoration/core"
-	"church-adoration/db"
 	"log"
+	"schoolsystem/auth-microservice/auth"
+	"schoolsystem/auth-microservice/core"
+	"schoolsystem/auth-microservice/db"
 
-	authRepository "church-adoration/auth/repository"
-	authUsecase "church-adoration/auth/usecase"
-
-	appointmentRepository "church-adoration/appointment/repository"
-	appointmentUsecase "church-adoration/appointment/usecase"
+	authRepository "schoolsystem/auth-microservice/auth/repository"
+	authUsecase "schoolsystem/auth-microservice/auth/usecase"
 
 	"net/http"
 
-	"github.com/casbin/casbin"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
@@ -47,18 +40,10 @@ func main() {
 
 	defer dbConn.Close()
 
-	// setup casbin
-	e, err := casbin.NewEnforcerSafe(conf.CasbinConfPath+"model.conf", conf.CasbinConfPath+"policy.csv")
-
-	if err != nil {
-		logger.Panic(err.Error())
-	}
-
 	// setup routes and middleware
 	r := chi.NewRouter()
 
 	r.Use(middleware.StripSlashes)
-	r.Use(middlewares.Authorizer(e))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -72,16 +57,11 @@ func main() {
 	authUsecase := authUsecase.NewAuthUsecase(authRepo)
 	auth.NewAuthHttpHandler(r, authUsecase)
 
-	appointmentRepo := appointmentRepository.NewMongoAppointmentRepository(dbConn)
-	appointmentUsecase := appointmentUsecase.NewAppointmentUsecase(appointmentRepo)
-	appointment.NewAppointmentHttpHandler(r, appointmentUsecase)
-
-	/* cours and server setup */
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "localhost:3000"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedOrigins: []string{"http://localhost:3000", "localhost:3000"},
+		AllowedHeaders:[]string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
-		Debug:            true,
+		Debug: true,
 	})
 	handler := c.Handler(r)
 	log.Printf("Server running on: %s", conf.BaseURL)
