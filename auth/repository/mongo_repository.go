@@ -1,9 +1,9 @@
 package repository
 
 import (
+	"church-adoration/auth"
+	"church-adoration/models"
 	"errors"
-	"schoolsystem/auth-microservice/auth"
-	"schoolsystem/auth-microservice/models"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -18,18 +18,8 @@ func NewMongoAuthRepository(session *mgo.Session) auth.AuthRepository {
 
 	return &mongoAuthRepo{
 		Session:        session,
-		UserCollection: session.DB("school-system").C("users"),
+		UserCollection: session.DB("church-adoration").C("users"),
 	}
-}
-
-func (m *mongoAuthRepo) SchoolRegistration(s *models.School) (*models.School, error) {
-	err := m.UserCollection.Insert(&s)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return s, nil
 }
 
 func (m *mongoAuthRepo) Login(email, password string) (*models.User, string, error) {
@@ -37,7 +27,11 @@ func (m *mongoAuthRepo) Login(email, password string) (*models.User, string, err
 	err := m.UserCollection.Find(bson.M{"email": email}).One(&u)
 
 	if err != nil {
-		return nil, "", errors.New("User with this email not found")
+		return nil, "", errors.New("User with this email not found.")
+	}
+
+	if !u.Verified {
+		return nil, "", errors.New("User is not verified.")
 	}
 
 	// check the password hash
@@ -57,26 +51,37 @@ func (m *mongoAuthRepo) Login(email, password string) (*models.User, string, err
 	return &u, token, nil
 }
 
-func (m *mongoAuthRepo) Signup(u *models.User) (*models.User, error) {
+func (m *mongoAuthRepo) Signup(u *models.User) (*models.User, string, error) {
 	// check if user already exists with this email
 	user := models.User{}
 	err := m.UserCollection.Find(bson.M{"email": u.Email}).One(&user)
-	if err == nil {
-		return nil, errors.New("User already registered")
+	if err == nil || user.Email != "" {
+		return nil, "", errors.New("User already registered")
 	}
+
+
 
 	hashedPassword, err := auth.HashPassword(u.Password)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	u.Password = hashedPassword
-	u.UserID = auth.GenerateUserID()
 
-	err = m.UserCollection.Insert(&u)
+	upsertedUser, err := m.UserCollection.Upsert(nil, u)
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return u, nil
+	return u, upsertedUser.UpsertedId.(bson.ObjectId).Hex(), nil
+}
+
+func (m *mongoAuthRepo) ActivateUser(id string) error {
+	err := m.UserCollection.Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"verified": true}})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

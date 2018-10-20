@@ -1,9 +1,9 @@
 package auth
 
-import "schoolsystem/auth-microservice/models"
+import "church-adoration/models"
 
 type AuthUsecase interface {
-	SchoolRegistration(*models.School) (*models.School, error)
+	ActivateUser(id string) error
 	Login(email, password string) (*models.User, string, error)
-	Signup(*models.User) (*models.User, error)
+	Signup(*models.User) (*models.User, string, error)
 }

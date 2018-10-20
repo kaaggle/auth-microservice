@@ -1,8 +1,10 @@
 package usecase
 
 import (
-	"schoolsystem/auth-microservice/auth"
-	"schoolsystem/auth-microservice/models"
+	"church-adoration/auth"
+	"church-adoration/core"
+
+	"church-adoration/models"
 )
 
 type authUsecase struct {
@@ -13,16 +15,6 @@ func NewAuthUsecase(authRepo auth.AuthRepository) auth.AuthRepository {
 	return &authUsecase{
 		authRepo: authRepo,
 	}
-}
-
-func (a *authUsecase) SchoolRegistration(s *models.School) (*models.School, error) {
-	school, err := a.authRepo.SchoolRegistration(s)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return school, nil
 }
 
 func (a *authUsecase) Login(email, password string) (*models.User, string, error) {
@@ -39,12 +31,31 @@ func (a *authUsecase) Login(email, password string) (*models.User, string, error
 	return user, token, nil
 }
 
-func (a *authUsecase) Signup(u *models.User) (*models.User, error) {
-	user, err := a.authRepo.Signup(u)
+func (a *authUsecase) Signup(u *models.User) (*models.User, string, error) {
+	user, userID, err := a.authRepo.Signup(u)
 
 	if err != nil {
-		return user, err
+		return nil, "", err
 	}
 
-	return user, nil
+	// send an email with userID to verify
+	err = core.SendEmail(
+		user.Email,
+		"Church Adoration Account Activation",
+		"Visit link http://localhost:3300/p/auth/activate/"+userID + " to activate your account.",
+		)
+	if err != nil {
+		return nil, "", err
+	}
+	return user, userID, nil
+}
+
+func (a *authUsecase) ActivateUser(id string) error {
+	err := a.authRepo.ActivateUser(id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
